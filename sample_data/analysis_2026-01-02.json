@@ -1,0 +1,29 @@
+{
+"date": "2026-01-02",
+"persons": [
+{
+"person_id": "P001",
+"name": "Arjun Mehta",
+"wellbeing_score": 72,
+"traits": {"social_engagement": 68, "physical_energy": 64, "movement_energy": 62},
+"gaze_direction": "forward",
+"eye_contact": true
+},
+{
+"person_id": "P002",
+"name": "Priya Sharma",
+"wellbeing_score": 66,
+"traits": {"social_engagement": 63, "physical_energy": 59, "movement_energy": 57},
+"gaze_direction": "side",
+"eye_contact": true
+},
+{
+"person_id": "P003",
+"name": "Rahul Verma",
+"wellbeing_score": 62,
+"traits": {"social_engagement": 56, "physical_energy": 52, "movement_energy": 50},
+"gaze_direction": "forward",
+"eye_contact": true
+}
+]
+}

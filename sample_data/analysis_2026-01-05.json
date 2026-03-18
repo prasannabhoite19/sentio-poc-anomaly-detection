@@ -1,0 +1,21 @@
+{
+"date": "2026-01-05",
+"persons": [
+{
+"person_id": "P001",
+"name": "Arjun Mehta",
+"wellbeing_score": 35,
+"traits": {"social_engagement": 25, "physical_energy": 45, "movement_energy": 40},
+"gaze_direction": "down",
+"eye_contact": false
+},
+{
+"person_id": "P002",
+"name": "Priya Sharma",
+"wellbeing_score": 45,
+"traits": {"social_engagement": 28, "physical_energy": 54, "movement_energy": 50},
+"gaze_direction": "down",
+"eye_contact": false
+}
+]
+}

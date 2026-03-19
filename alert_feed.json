@@ -1,0 +1,119 @@
+{
+  "source": "p5_anomaly_detection",
+  "generated_at": "2026-03-18T16:50:40.584174",
+  "school": "Demo School",
+  "alert_summary": {
+    "total_alerts": 9,
+    "urgent": 2,
+    "monitor": 7,
+    "informational": 0
+  },
+  "alerts": [
+    {
+      "category": "SUDDEN_DROP",
+      "severity": "urgent",
+      "value": 38.67,
+      "description": "Wellbeing dropped by 38.7 points from baseline",
+      "recommended_action": "Check-in with student; monitor mood and engagement",
+      "person_id": "P001",
+      "person_name": "P001",
+      "date": "2026-01-05"
+    },
+    {
+      "category": "SUDDEN_DROP",
+      "severity": "urgent",
+      "value": 35.67,
+      "description": "Wellbeing dropped by 35.7 points from baseline",
+      "recommended_action": "Check-in with student; monitor mood and engagement",
+      "person_id": "P001",
+      "person_name": "P001",
+      "date": "2026-01-06"
+    },
+    {
+      "category": "SOCIAL_WITHDRAWAL",
+      "severity": "monitor",
+      "value": 44.0,
+      "description": "Social engagement dropped by 44.0 with downward/size gaze",
+      "recommended_action": "Encourage social interaction; monitor peer engagement",
+      "person_id": "P001",
+      "person_name": "P001",
+      "date": "2026-01-05"
+    },
+    {
+      "category": "SOCIAL_WITHDRAWAL",
+      "severity": "monitor",
+      "value": 42.0,
+      "description": "Social engagement dropped by 42.0 with downward/size gaze",
+      "recommended_action": "Encourage social interaction; monitor peer engagement",
+      "person_id": "P001",
+      "person_name": "P001",
+      "date": "2026-01-06"
+    },
+    {
+      "category": "SUDDEN_DROP",
+      "severity": "monitor",
+      "value": 21.33,
+      "description": "Wellbeing dropped by 21.3 points from baseline",
+      "recommended_action": "Check-in with student; monitor mood and engagement",
+      "person_id": "P002",
+      "person_name": "P002",
+      "date": "2026-01-05"
+    },
+    {
+      "category": "SOCIAL_WITHDRAWAL",
+      "severity": "monitor",
+      "value": 35.33,
+      "description": "Social engagement dropped by 35.3 with downward/size gaze",
+      "recommended_action": "Encourage social interaction; monitor peer engagement",
+      "person_id": "P002",
+      "person_name": "P002",
+      "date": "2026-01-05"
+    },
+    {
+      "category": "SUDDEN_DROP",
+      "severity": "monitor",
+      "value": 24.33,
+      "description": "Wellbeing dropped by 24.3 points from baseline",
+      "recommended_action": "Check-in with student; monitor mood and engagement",
+      "person_id": "P002",
+      "person_name": "P002",
+      "date": "2026-01-06"
+    },
+    {
+      "category": "SOCIAL_WITHDRAWAL",
+      "severity": "monitor",
+      "value": 38.33,
+      "description": "Social engagement dropped by 38.3 with downward/size gaze",
+      "recommended_action": "Encourage social interaction; monitor peer engagement",
+      "person_id": "P002",
+      "person_name": "P002",
+      "date": "2026-01-06"
+    },
+    {
+      "category": "GAZE_AVOIDANCE",
+      "severity": "monitor",
+      "value": 3,
+      "description": "No eye contact observed for 3 consecutive days",
+      "recommended_action": "Encourage engagement; monitor emotional state",
+      "person_id": "P002",
+      "person_name": "P002",
+      "date": "2026-01-06"
+    }
+  ],
+  "absence_flags": [
+    {
+      "person_id": "P003",
+      "person_name": "P003",
+      "last_seen_date": "2026-01-03",
+      "days_absent": 2,
+      "recommended_action": "Welfare check \u2014 contact family if absent again tomorrow"
+    }
+  ],
+  "school_summary": {
+    "total_persons_tracked": 3,
+    "persons_flagged_today": 0,
+    "persons_flagged_yesterday": 0,
+    "most_common_anomaly_this_week": "SUDDEN_DROP",
+    "school_avg_wellbeing_today": 0
+  }
+}

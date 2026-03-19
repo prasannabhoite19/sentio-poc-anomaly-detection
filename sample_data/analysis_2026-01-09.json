@@ -1,0 +1,21 @@
+{
+"date": "2026-01-09",
+"persons": [
+{
+"person_id": "P003",
+"name": "Rahul Verma",
+"wellbeing_score": 70,
+"traits": {"social_engagement": 60, "physical_energy": 55, "movement_energy": 50},
+"gaze_direction": "forward",
+"eye_contact": true
+},
+{
+"person_id": "P004",
+"name": "Neha Joshi",
+"wellbeing_score": 75,
+"traits": {"social_engagement": 72, "physical_energy": 67, "movement_energy": 65},
+"gaze_direction": "forward",
+"eye_contact": true
+}
+]
+}

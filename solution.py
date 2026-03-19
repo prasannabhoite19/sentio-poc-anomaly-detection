@@ -19,7 +19,7 @@ from collections import defaultdict, Counter
 DATA_DIR   = Path("sample_data")
 REPORT_OUT = Path("alert_digest.html")
 FEED_OUT   = Path("alert_feed.json")
-SCHOOL     = "Demo School"
+SCHOOL     = "International School"
 
 THRESHOLDS = {
     "sudden_drop_delta":           20,   # baseline - today >= this → SUDDEN_DROP
@@ -400,7 +400,13 @@ def analyse_person(person_id: str, sorted_days: dict, info: dict) -> list:
 
     history = []
 
-    person_name = info.get("name", person_id)
+    person_name = next(iter(sorted_days.values())).get("name", person_id)
+    
+    profile_image = info.get("profile_image_b64", "")
+
+    alert_counter = 1
+    
+    consecutive_flags = defaultdict(int)
 
     for date, today_data in sorted_days.items():
         history.append(today_data)
@@ -410,7 +416,8 @@ def analyse_person(person_id: str, sorted_days: dict, info: dict) -> list:
 
         baseline = compute_baseline(history)
 
-        detectors = [
+        # Run detectors
+        detector_outputs = [
             detect_sudden_drop(today_data, baseline),
             detect_sustained_low(history),
             detect_social_withdrawal(today_data, baseline),
@@ -419,15 +426,73 @@ def analyse_person(person_id: str, sorted_days: dict, info: dict) -> list:
             detect_gaze_avoidance(history),
         ]
 
-        for alert in detectors:
-            if alert:
-                alert.update({
-                    "person_id": person_id,
-                    "person_name": person_name,
-                    "date": date,
-                })
-                alerts.append(alert)
-    # TODO
+        for det in detector_outputs:
+            if not det:
+                continue
+
+            category = det["category"]
+
+            # Track consecutive flags
+            consecutive_flags[category] += 1
+
+            today_wb = today_data.get("wellbeing", 0)
+            base_wb  = baseline.get("wellbeing_mean", 0)
+            delta    = today_wb - base_wb
+
+            # Last 5 days trend
+            trend = [
+                d.get("wellbeing", 0)
+                for d in history[-5:]
+            ]
+
+            # Lowest trait
+            traits = {
+                "social_engagement": today_data.get("social_engagement"),
+                "physical_energy": today_data.get("physical_energy"),
+                "movement_energy": today_data.get("movement_energy"),
+            }
+
+            valid_traits = {k: v for k, v in traits.items() if v is not None}
+            if valid_traits:
+                lowest_trait = min(valid_traits, key=valid_traits.get)
+                lowest_value = valid_traits[lowest_trait]
+            else:
+                lowest_trait = None
+                lowest_value = None
+
+            alert = {
+                "alert_id": f"ALT_{alert_counter:03d}",
+                "person_id": person_id,
+                "person_name": person_name,
+                "date": date,
+                "severity": det.get("severity"),
+                "_note_severity": "one of: urgent / monitor / informational",
+                "category": category,
+                "_note_category": "one of: SUDDEN_DROP / SUSTAINED_LOW / SOCIAL_WITHDRAWAL / HYPERACTIVITY_SPIKE / REGRESSION / GAZE_AVOIDANCE / ABSENCE_FLAG",
+
+                "title": category.replace("_", " ").title(),
+
+                "description": f"{person_name}'s wellbeing changed from baseline {base_wb:.1f} to {today_wb}.",
+
+                "baseline_wellbeing": round(base_wb, 2),
+                "today_wellbeing": today_wb,
+                "delta": round(delta, 2),
+
+                "days_flagged_consecutively": consecutive_flags[category],
+
+                "trend_last_5_days": trend,
+
+                "lowest_trait": lowest_trait,
+                "lowest_trait_value": lowest_value,
+
+                "recommended_action": det.get("recommended_action"),
+
+                "profile_image_b64": profile_image
+            }
+
+            alerts.append(alert)
+            alert_counter += 1
+
     return alerts
 
 
@@ -450,25 +515,34 @@ def generate_alert_digest(alerts: list, absence_flags: list,
 
     TODO: implement
     """
+
     today_str = str(date.today())
 
+    # ----------------------------
+    # Today's alerts
+    # ----------------------------
     todays_alerts = [a for a in alerts if a.get("date") == today_str]
 
     severity_order = {"urgent": 0, "monitor": 1, "informational": 2}
-    todays_alerts.sort(key=lambda a: severity_order.get(a.get("severity", "informational"), 3))
+    todays_alerts.sort(key=lambda x: severity_order.get(x.get("severity"), 3))
 
-    person_alerts_days = defaultdict(list)
-    for a in alerts:
-        person_alerts_days[a["person_id"]].append(a["date"])
-
-    flagged_3_days = []
-    for pid, days in person_alerts_days.items():
-        if len(set(days)) >= 3:
-            flagged_3_days.append(pid)
-
-    
     # ----------------------------
-    # HTML BUILD
+    # Persistent alerts (3+ days)
+    # ----------------------------
+    persistent = [
+        a for a in alerts
+        if a.get("days_flagged_consecutively", 0) >= 3
+    ]
+
+    seen = set()
+    persistent_people = []
+    for a in persistent:
+        if a["person_id"] not in seen:
+            persistent_people.append(a["person_name"])
+            seen.add(a["person_id"])
+
+    # ----------------------------
+    # HTML START
     # ----------------------------
     html = f"""
     <html>
@@ -476,46 +550,61 @@ def generate_alert_digest(alerts: list, absence_flags: list,
         <title>Alert Digest</title>
         <style>
             body {{ font-family: Arial; background: #f5f5f5; padding: 20px; }}
-            .card {{ background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; }}
-            .urgent {{ border-left: 5px solid red; }}
-            .monitor {{ border-left: 5px solid orange; }}
+            .card {{ background: white; padding: 15px; margin-bottom: 12px; border-radius: 8px; }}
+            .urgent {{ border-left: 6px solid red; }}
+            .monitor {{ border-left: 6px solid orange; }}
+
             .badge {{
                 padding: 4px 8px;
                 border-radius: 5px;
                 color: white;
                 font-size: 12px;
+                margin-left: 10px;
             }}
+
             .badge-urgent {{ background: red; }}
             .badge-monitor {{ background: orange; }}
+
+            .spark span {{
+                display:inline-block;
+                width:10px;
+                height:10px;
+                margin-right:2px;
+                border-radius:2px;
+            }}
         </style>
     </head>
     <body>
 
-    <h1> Alert Digest - {school_summary.get("school", "School")}</h1>
+    <h1>📊 Alert Digest - {SCHOOL}</h1>
 
-    <h2> Today's Alerts</h2>
+    <h2>🚨 Today's Alerts</h2>
     """
 
     # ----------------------------
     # Section 1: Alerts
     # ----------------------------
     if not todays_alerts:
-        html += "<p>No alerts today </p>"
+        html += "<p>No alerts today 🎉</p>"
     else:
         for a in todays_alerts:
-            severity = a.get("severity", "monitor")
-            desc = a.get("description", "No description")
+            severity = a["severity"]
+            trend = a.get("trend_last_5_days", [])
+
+            # simple sparkline (green → red)
+            spark = ""
+            for val in trend:
+                color = "#4caf50" if val > 60 else "#ff9800" if val > 40 else "#f44336"
+                spark += f'<span style="background:{color}"></span>'
 
             html += f"""
             <div class="card {severity}">
-                <b>{a.get("person_name")}</b>
+                <b>{a['person_name']}</b>
                 <span class="badge badge-{severity}">{severity.upper()}</span>
-                <p>{desc}</p>
 
-                <!-- Simple sparkline -->
-                <div>
-                    {"".join('<span style="display:inline-block;width:10px;height:10px;background:#4caf50;margin-right:2px;"></span>' for _ in range(5))}
-                </div>
+                <p><b>{a['category']}</b>: {a['description']}</p>
+
+                <div class="spark">{spark}</div>
             </div>
             """
 
@@ -523,43 +612,38 @@ def generate_alert_digest(alerts: list, absence_flags: list,
     # Section 2: School Summary
     # ----------------------------
     html += f"""
-    <h2>  School Summary</h2>
+    <h2>🏫 School Summary</h2>
     <ul>
         <li>Total Persons: {school_summary.get("total_persons_tracked", 0)}</li>
         <li>Flagged Today: {school_summary.get("persons_flagged_today", 0)}</li>
+        <li>Flagged Yesterday: {school_summary.get("persons_flagged_yesterday", 0)}</li>
         <li>Most Common Issue: {school_summary.get("most_common_anomaly_this_week", "N/A")}</li>
     </ul>
     """
 
     # ----------------------------
-    # Section 3: Repeated Alerts
+    # Section 3: Persistent Alerts
     # ----------------------------
-    html += "<h2>  Repeated Alerts (3+ days)</h2>"
+    html += "<h2>⚠️ Persistent Alerts (3+ days)</h2>"
 
-    if not flagged_3_days:
+    if not persistent_people:
         html += "<p>None</p>"
     else:
         html += "<ul>"
-        for pid in flagged_3_days:
-            html += f"<li>{pid}</li>"
+        for name in persistent_people:
+            html += f"<li>{name}</li>"
         html += "</ul>"
 
     # ----------------------------
-    # Absence Section (bonus)
+    # Absence Section
     # ----------------------------
     if absence_flags:
-        html += "<h2>  Absence Alerts</h2><ul>"
+        html += "<h2>🚫 Absence Alerts</h2><ul>"
         for a in absence_flags:
             html += f"<li>{a['person_name']} - {a['days_absent']} days absent</li>"
         html += "</ul>"
 
-    # ----------------------------
-    # Close HTML
-    # ----------------------------
-    html += """
-    </body>
-    </html>
-    """
+    html += "</body></html>"
 
     # ----------------------------
     # Write file
